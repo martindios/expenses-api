@@ -73,7 +73,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     private Category findCategory(ExpenseDTO expenseDTO) {
         if(!expenseDTO.hasValidCategory()) {
-            throw new RuntimeException("Either categoryId or categoryName must be provided");
+            throw new IllegalArgumentException("Either categoryId or categoryName must be provided");
         }
 
         if(expenseDTO.getCategoryId() != null) {

@@ -5,6 +5,7 @@ import com.example.jparestful.mapper.ExpenseMapper;
 import com.example.jparestful.model.Expense;
 import com.example.jparestful.service.ExpenseService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,9 +36,8 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<Expense> create(@Valid @RequestBody ExpenseDTO dto) {
-        Expense expense = expenseService.create(dto);
-        Expense saved = expenseService.save(expense);
-        return ResponseEntity.ok(saved);
+        Expense saved = expenseService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
