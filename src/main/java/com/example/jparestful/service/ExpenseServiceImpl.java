@@ -1,12 +1,15 @@
 package com.example.jparestful.service;
 
 import com.example.jparestful.dto.ExpenseDTO;
+import com.example.jparestful.exception.DuplicateResourceException;
+import com.example.jparestful.exception.ResourceNotFoundException;
 import com.example.jparestful.mapper.ExpenseMapper;
 import com.example.jparestful.model.Category;
 import com.example.jparestful.model.Expense;
 import com.example.jparestful.repository.CategoryRepository;
 import com.example.jparestful.repository.ExpenseRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -39,8 +42,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     public Expense create(ExpenseDTO expenseDTO) {
         Category category = findCategory(expenseDTO);
 
-        Expense expense = ExpenseMapper.toEntity(expenseDTO, category);
-        return expenseRepository.save(expense);
+        try {
+            Expense expense = ExpenseMapper.toEntity(expenseDTO, category);
+            return expenseRepository.save(expense);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException("Expense", "category", category.getName());
+        }
+
     }
 
     @Override
@@ -51,7 +59,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     public Expense update(UUID id, ExpenseDTO expenseDTO) {
         Category category = categoryRepository.findById(expenseDTO.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found with id " + expenseDTO.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Category"));
         return expenseRepository.findById(id)
                 .map(existing -> {
                     existing.setExpenseDate(expenseDTO.getExpenseDate());
@@ -60,13 +68,13 @@ public class ExpenseServiceImpl implements ExpenseService {
                     existing.setDescription(expenseDTO.getDescription());
                     return expenseRepository.save(existing);
                 })
-                .orElseThrow(() -> new RuntimeException("Expense not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Expense", id.toString()));
     }
 
     @Override
     public void deleteById(UUID id) {
         if(!expenseRepository.existsById(id)) {
-            throw new RuntimeException("Expense not found with id " + id);
+            throw new ResourceNotFoundException("Expense", id.toString());
         }
         expenseRepository.deleteById(id);
     }
@@ -83,6 +91,6 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         // Marronada de época
         return (Category) categoryRepository.findByName(expenseDTO.getCategoryName())
-                .orElseThrow(() -> new RuntimeException("Category not found with name: " + expenseDTO.getCategoryName()));
+                .orElseThrow(() -> new ResourceNotFoundException("Category", expenseDTO.getCategoryName()));
     }
 }

@@ -1,6 +1,7 @@
 package com.example.jparestful.controller;
 
 import com.example.jparestful.dto.ExpenseDTO;
+import com.example.jparestful.exception.ResourceNotFoundException;
 import com.example.jparestful.mapper.ExpenseMapper;
 import com.example.jparestful.model.Expense;
 import com.example.jparestful.service.ExpenseService;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -31,7 +33,7 @@ public class ExpenseController {
     public ResponseEntity<Expense> findById(@PathVariable UUID id) {
         return expenseService.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResourceNotFoundException("Expense", id.toString()));
     }
 
     @PostMapping
@@ -42,21 +44,13 @@ public class ExpenseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Expense> update(@PathVariable UUID id, @Valid @RequestBody ExpenseDTO expenseDTO) {
-        try {
-            Expense updated = expenseService.update(id, expenseDTO);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Expense updated = expenseService.update(id, expenseDTO);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        try {
-            expenseService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        expenseService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

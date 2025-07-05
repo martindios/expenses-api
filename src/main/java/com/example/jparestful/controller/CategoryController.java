@@ -1,6 +1,7 @@
 package com.example.jparestful.controller;
 
 import com.example.jparestful.dto.CategoryDTO;
+import com.example.jparestful.exception.ResourceNotFoundException;
 import com.example.jparestful.model.Category;
 import com.example.jparestful.service.CategoryService;
 import jakarta.validation.Valid;
@@ -31,7 +32,7 @@ public class CategoryController {
     public ResponseEntity<Category> findById(@PathVariable UUID id) {
         return categoryService.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
     }
 
     @PostMapping
@@ -42,21 +43,13 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Category> update(@PathVariable UUID id, @Valid @RequestBody CategoryDTO categoryDTO) {
-        try {
-            Category updated = categoryService.update(id, categoryDTO);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Category updated = categoryService.update(id, categoryDTO);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        try {
-            categoryService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        categoryService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
