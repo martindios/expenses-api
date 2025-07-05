@@ -4,6 +4,7 @@ package com.example.jparestful.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Validated
 public class ExpenseDTO {
 
     @NotNull(message = "Date is mandatory")
@@ -28,6 +30,7 @@ public class ExpenseDTO {
     @Size(max = 1000, message = "Description cannot excedeed 1000 characters")
     private String description;
 
+    @AssertTrue(message = "Either categoryID or categoryName must be provided")
     public boolean hasValidCategory() {
         return categoryId != null || (categoryName != null && !categoryName.trim().isEmpty());
     }
