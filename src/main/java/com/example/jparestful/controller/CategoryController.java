@@ -4,6 +4,7 @@ import com.example.jparestful.dto.CategoryDTO;
 import com.example.jparestful.model.Category;
 import com.example.jparestful.service.CategoryService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,13 +37,13 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<Category> create(@Valid @RequestBody CategoryDTO categoryDTO) {
         Category saved = categoryService.create(categoryDTO);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> update(@Valid @RequestBody CategoryDTO categoryDTO) {
+    public ResponseEntity<Category> update(@PathVariable UUID id, @Valid @RequestBody CategoryDTO categoryDTO) {
         try {
-            Category updated = categoryService.update(categoryDTO);
+            Category updated = categoryService.update(id, categoryDTO);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
