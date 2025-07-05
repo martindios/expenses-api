@@ -31,7 +31,7 @@ public class Expense {
     @Column(nullable = false)
     private LocalDateTime expenseDate;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Muchos gastos pueden pertenecer a la misma categoria
+    @ManyToOne(fetch = FetchType.EAGER) // Muchos gastos pueden pertenecer a la misma categoria
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
