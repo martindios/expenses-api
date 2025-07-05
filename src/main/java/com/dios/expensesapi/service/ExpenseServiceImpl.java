@@ -86,7 +86,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         if(expenseDTO.getCategoryId() != null) {
             return categoryRepository.findById(expenseDTO.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found with id " + expenseDTO.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", expenseDTO.getCategoryId().toString()));
         }
 
         return categoryRepository.findByName(expenseDTO.getCategoryName())
