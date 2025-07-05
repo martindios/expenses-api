@@ -89,8 +89,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                     .orElseThrow(() -> new RuntimeException("Category not found with id " + expenseDTO.getCategoryId()));
         }
 
-        // Marronada de época
-        return (Category) categoryRepository.findByName(expenseDTO.getCategoryName())
+        return categoryRepository.findByName(expenseDTO.getCategoryName())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", expenseDTO.getCategoryName()));
     }
 }
