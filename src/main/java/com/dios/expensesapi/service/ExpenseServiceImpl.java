@@ -1,6 +1,7 @@
 package com.dios.expensesapi.service;
 
 import com.dios.expensesapi.dto.ExpenseDTO;
+import com.dios.expensesapi.dto.ExpenseResponseDTO;
 import com.dios.expensesapi.exception.DuplicateResourceException;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.mapper.ExpenseMapper;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @Service
 @Transactional // Asegura la consistencia de las operaciones que modifican datos, rollback o commit
@@ -34,21 +36,28 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 
     @Override
-    public Iterable<Expense> findAll() {
+    public Iterable<ExpenseResponseDTO> findAll() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
         User currentUser = userService.findByEmail(userEmail);
 
-        return expenseRepository.findByUser(currentUser);
+        return StreamSupport.stream(expenseRepository.findByUser(currentUser).spliterator(), false)
+                .map(ExpenseMapper::toResponseDTO)
+                .toList();
     }
 
     @Override
-    public Optional<Expense> findById(UUID id) {
-        return expenseRepository.findById(id);
+    public Optional<ExpenseResponseDTO> findById(UUID id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        User currentUser = userService.findByEmail(userEmail);
+
+        return expenseRepository.findByUserAndId(currentUser, id)
+                .map(ExpenseMapper::toResponseDTO);
     }
 
     @Override
-    public Expense create(ExpenseDTO expenseDTO) {
+    public ExpenseResponseDTO create(ExpenseDTO expenseDTO) {
         Category category = findCategory(expenseDTO);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -58,7 +67,8 @@ public class ExpenseServiceImpl implements ExpenseService {
         try {
             Expense expense = ExpenseMapper.toEntity(expenseDTO, category);
             expense.setUser(currentUser);
-            return expenseRepository.save(expense);
+            Expense savedExpense = expenseRepository.save(expense);
+            return ExpenseMapper.toResponseDTO(savedExpense);
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateResourceException("Expense", "category", category.getName());
         }
@@ -66,12 +76,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public Expense save(Expense expense) {
-        return expenseRepository.save(expense);
-    }
-
-    @Override
-    public Expense update(UUID id, ExpenseDTO expenseDTO) {
+    public ExpenseResponseDTO update(UUID id, ExpenseDTO expenseDTO) {
         Category category = categoryRepository.findById(expenseDTO.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category"));
 
@@ -85,7 +90,8 @@ public class ExpenseServiceImpl implements ExpenseService {
                     existing.setCategory(category);
                     existing.setAmount(expenseDTO.getAmount());
                     existing.setDescription(expenseDTO.getDescription());
-                    return expenseRepository.save(existing);
+                    Expense updated =  expenseRepository.save(existing);
+                    return ExpenseMapper.toResponseDTO(updated);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Expense", id.toString()));
     }

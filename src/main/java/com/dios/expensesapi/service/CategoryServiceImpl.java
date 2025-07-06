@@ -1,17 +1,23 @@
 package com.dios.expensesapi.service;
 
 import com.dios.expensesapi.dto.CategoryDTO;
+import com.dios.expensesapi.dto.CategoryResponseDTO;
 import com.dios.expensesapi.exception.DuplicateResourceException;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.mapper.CategoryMapper;
+import com.dios.expensesapi.mapper.ExpenseMapper;
 import com.dios.expensesapi.model.Category;
+import com.dios.expensesapi.model.User;
 import com.dios.expensesapi.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @Service
 @Transactional
@@ -24,24 +30,28 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Iterable<Category> findAll() {
-        return categoryRepository.findAll();
+    public Iterable<CategoryResponseDTO> findAll() {
+        return StreamSupport.stream(categoryRepository.findAll().spliterator(), false)
+                .map(CategoryMapper::toResponseDTO)
+                .toList();
     }
 
     @Override
-    public Optional<Category> findById(UUID id) {
-        return categoryRepository.findById(id);
+    public Optional<CategoryResponseDTO> findById(UUID id) {
+        return categoryRepository.findById(id)
+                .map(CategoryMapper::toResponseDTO);
     }
 
     @Override
-    public Category create(CategoryDTO categoryDTO) {
+    public CategoryResponseDTO create(CategoryDTO categoryDTO) {
         if(categoryRepository.findByName(categoryDTO.getName()).isPresent()){
             throw new DuplicateResourceException("Category", "name",  categoryDTO.getName());
         }
 
         try {
             Category category = CategoryMapper.toEntity(categoryDTO);
-            return categoryRepository.save(category);
+            Category saved = categoryRepository.save(category);
+            return CategoryMapper.toResponseDTO(saved);
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateResourceException("Category", "name",  categoryDTO.getName());
         }
@@ -49,12 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Category save(Category category) {
-        return categoryRepository.save(category);
-    }
-
-    @Override
-    public Category update(UUID id, CategoryDTO categoryDTO) {
+    public CategoryResponseDTO update(UUID id, CategoryDTO categoryDTO) {
         return categoryRepository.findById(id)
                 .map(existing -> {
                     categoryRepository.findByName(categoryDTO.getName())
@@ -65,7 +70,8 @@ public class CategoryServiceImpl implements CategoryService {
 
                     existing.setName(categoryDTO.getName());
                     existing.setDescription(categoryDTO.getDescription());
-                    return categoryRepository.save(existing);
+                    Category updated = categoryRepository.save(existing);
+                    return  CategoryMapper.toResponseDTO(updated);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
     }

@@ -1,6 +1,7 @@
 package com.dios.expensesapi.controller;
 
 import com.dios.expensesapi.dto.CategoryDTO;
+import com.dios.expensesapi.dto.CategoryResponseDTO;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.model.Category;
 import com.dios.expensesapi.service.CategoryService;
@@ -23,27 +24,27 @@ public class CategoryController {
 
 
     @GetMapping
-    public ResponseEntity<Iterable<Category>> findAll() {
-        Iterable<Category> expenses = categoryService.findAll();
+    public ResponseEntity<Iterable<CategoryResponseDTO>> findAll() {
+        Iterable<CategoryResponseDTO> expenses = categoryService.findAll();
         return ResponseEntity.ok(expenses);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> findById(@PathVariable UUID id) {
+    public ResponseEntity<CategoryResponseDTO> findById(@PathVariable UUID id) {
         return categoryService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id.toString()));
     }
 
     @PostMapping
-    public ResponseEntity<Category> create(@Valid @RequestBody CategoryDTO categoryDTO) {
-        Category saved = categoryService.create(categoryDTO);
+    public ResponseEntity<CategoryResponseDTO> create(@Valid @RequestBody CategoryDTO categoryDTO) {
+        CategoryResponseDTO saved = categoryService.create(categoryDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> update(@PathVariable UUID id, @Valid @RequestBody CategoryDTO categoryDTO) {
-        Category updated = categoryService.update(id, categoryDTO);
+    public ResponseEntity<CategoryResponseDTO> update(@PathVariable UUID id, @Valid @RequestBody CategoryDTO categoryDTO) {
+        CategoryResponseDTO updated = categoryService.update(id, categoryDTO);
         return ResponseEntity.ok(updated);
     }
 
