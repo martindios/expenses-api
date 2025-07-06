@@ -28,6 +28,10 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column(nullable = false)
     private LocalDateTime expenseDate;
 
@@ -44,4 +48,9 @@ public class Expense {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public UUID getUserId() {
+        return user != null ? user.getId() : null;
+    }
+
 }
