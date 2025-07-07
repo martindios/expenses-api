@@ -3,8 +3,8 @@ package com.dios.expensesapi.controller;
 import com.dios.expensesapi.dto.CategoryDTO;
 import com.dios.expensesapi.dto.CategoryResponseDTO;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
-import com.dios.expensesapi.model.Category;
 import com.dios.expensesapi.service.CategoryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/categories")
+@Tag(name = "Category", description = "Endpoint to manage different types of expense categories")
 public class CategoryController {
 
     private final CategoryService categoryService;

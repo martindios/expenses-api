@@ -30,7 +30,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                /* Como la API no guarda estado se puede deshabilitar el CSRF, un token para asegurarse
+                *  de que la llamada proviene realmente de la interfaz web y no de un sitio malicioso que
+                *  suplanta peticiones en nombre del usuario, se debe habilitar en webs con cookies que mantengan
+                * sesión. */
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF to APIs (stateless API)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/categories/**").hasAnyRole("USER", "ADMIN")
@@ -41,7 +45,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
         return http.build();
     }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+/* Servicio para cargar un usuario */
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;

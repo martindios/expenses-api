@@ -7,6 +7,7 @@ import com.dios.expensesapi.dto.RegisterRequest;
 import com.dios.expensesapi.model.Role;
 import com.dios.expensesapi.model.User;
 import com.dios.expensesapi.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "Endpoint to manage authorization")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;

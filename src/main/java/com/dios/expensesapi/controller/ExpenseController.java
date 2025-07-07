@@ -3,8 +3,8 @@ package com.dios.expensesapi.controller;
 import com.dios.expensesapi.dto.ExpenseDTO;
 import com.dios.expensesapi.dto.ExpenseResponseDTO;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
-import com.dios.expensesapi.model.Expense;
 import com.dios.expensesapi.service.ExpenseService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/expenses")
+@Tag(name = "Expenses", description = "Endpoint to manage different types of expenses")
 public class ExpenseController {
 
     private final ExpenseService expenseService;

@@ -1,5 +1,6 @@
 package com.dios.expensesapi.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,6 +20,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/* Implement UserDetails (Spring Security interface) so that the User
+*  entity is directly compatible */
+@Schema(description = "Entity that represents a user")
 public class User implements UserDetails {
 
     @Id
@@ -56,21 +60,6 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.dios.expensesapi.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "Entity that represents an expense category")
 public class Category {
 
     @Id

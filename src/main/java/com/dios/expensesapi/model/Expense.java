@@ -1,5 +1,6 @@
 package com.dios.expensesapi.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,13 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder // Genera un builder para la clase para la creación de instancias con builder
-/*
-Expense e = Expense.builder()
-    .id(uuid)
-    .expenseDate(fecha)
-    .(...)
-    .build();
-*/
+@Schema(description = "Entity that represents a user's expense")
 public class Expense {
 
     @Id
