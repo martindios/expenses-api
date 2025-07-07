@@ -22,34 +22,42 @@ import java.util.UUID;
 @Builder
 /* Implement UserDetails (Spring Security interface) so that the User
 *  entity is directly compatible */
-@Schema(description = "Entity that represents a user")
+@Schema(description = "User entity representing a registered user in the system.")
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Schema(description = "Unique identifier for the user", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID id;
 
     @Column(unique = true, nullable = false)
+    @Schema(description = "User's email address used for authentication", example = "user@example.com")
     private String email;
 
     @Column(nullable = false)
+    @Schema(description = "User's encrypted password", accessMode = Schema.AccessMode.WRITE_ONLY)
     private String password;
 
     @Column(nullable = false)
+    @Schema(description = "User's first name", example = "John")
     private String firstName;
 
     @Column(nullable = false)
+    @Schema(description = "User's last name", example = "Doe")
     private String lastName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Schema(description = "User's role in the system", example = "USER")
     private Role role;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
+    @Schema(description = "Timestamp when the user was created", example = "01-01-2001 01:01:01")
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @Schema(description = "Indicates if the user account is active", example = "true")
     private boolean enabled = true;
 
     @Override

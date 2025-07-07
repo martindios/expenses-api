@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/expenses")
-@Tag(name = "Expenses", description = "Endpoint to manage different types of expenses")
+@Tag(name = "Expenses", description = "Operations related to expense managment. Allows users to create, read, update and delete their personal expenses.")
 public class ExpenseController {
 
     private final ExpenseService expenseService;

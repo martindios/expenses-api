@@ -29,13 +29,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @Nonnull HttpServletResponse response,
             @Nonnull FilterChain filterChain) throws ServletException, IOException {
 
-        // Extracción del header Authorization
+        // Extraction of the Authorization header
         final String authHeader = request.getHeader("Authorization");
 
         final String jwt;
         final String userEmail;
 
-        // Verificación de que existe y comienza con 'Bearer ' (Bearer = Portador, tipo de credencial usado)
+        // Verification that it exists and starts with 'Bearer ' (Bearer = Portador, token type used)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;

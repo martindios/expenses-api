@@ -1,6 +1,7 @@
 package com.dios.expensesapi.dto;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,12 +14,13 @@ import java.util.UUID;
 @Getter
 @Setter
 @Validated
+@Schema(description = "Data to create or update an expense")
 public class ExpenseDTO {
 
     @NotNull(message = "Date is mandatory")
     private LocalDateTime expenseDate;
 
-    // No se le puede poner NotNull porque uno de ellos si que puede ser null, se utiliza el método hasValidCategory
+    // Cannot use NotNull because one of them can be null; the hasValidCategory() is used
     private UUID categoryId;
     private String categoryName;
 

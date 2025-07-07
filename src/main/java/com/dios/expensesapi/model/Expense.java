@@ -9,14 +9,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity // Entidad de JPA, anota que se va a mapear a una tabla de BD
+@Entity // JPA entity, annotated to be mapped to a database table
 @Table(name = "expenses")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // Genera un builder para la clase para la creación de instancias con builder
-@Schema(description = "Entity that represents a user's expense")
+@Builder // Generates a builder for the class to create instances using the builder pattern
+@Schema(description = "Expense entity representing a user's financial expense record")
 public class Expense {
 
     @Id
@@ -30,7 +30,7 @@ public class Expense {
     @Column(nullable = false)
     private LocalDateTime expenseDate;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Muchos gastos pueden pertenecer a la misma categoria
+    @ManyToOne(fetch = FetchType.EAGER) // Many expenses can belong to one category
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
