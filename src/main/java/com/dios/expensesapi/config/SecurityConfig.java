@@ -30,10 +30,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                /* Como la API no guarda estado se puede deshabilitar el CSRF, un token para asegurarse
-                *  de que la llamada proviene realmente de la interfaz web y no de un sitio malicioso que
-                *  suplanta peticiones en nombre del usuario, se debe habilitar en webs con cookies que mantengan
-                * sesión. */
+                /* Since the API does not maintain state, CSRF can be disabled. A CSRF token is used to ensure
+                  that the call actually comes from the web interface and not from a malicious site that impersonates
+                  requests on behalf of the user. It should be enabled on websites with cookies that
+                  maintain sessions. */
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF to APIs (stateless API)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()

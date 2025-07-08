@@ -18,7 +18,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    // Clave para firmar los JWT
+    // Key to sign JWT
     @Value("${jwt.secret:mySecretKey}")
     private String secret;
 
@@ -58,14 +58,14 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    /* Los claims son las propiedades o afirmaciones dentro del payload. */
+    /* Claims are different properties in the payload. */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        /* Cuando se descodifica el JWT el payload es lo que se obtiene como contenido del token */
+                /* When JWT is decoded, the payload is what is obtained as the content of the token */
     }
 
     public Boolean isTokenExpired(String token) {
