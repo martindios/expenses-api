@@ -57,6 +57,7 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @Builder.Default
     @Schema(description = "Indicates if the user account is active", example = "true")
     private boolean enabled = true;
 

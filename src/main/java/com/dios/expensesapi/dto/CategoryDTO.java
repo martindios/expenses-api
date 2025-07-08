@@ -8,12 +8,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(description = "Data to create or update a category")
+@Schema(description = "Data transfer object for creating or updating a category")
 public class CategoryDTO {
 
     @NotBlank(message = "Category name cannot be blank")
+    @Schema(description = "Name of the category", example = "Food & Dining")
     private String name;
 
     @Size(max = 1000, message = "Description cannot excedeed 1000 characters")
+    @Schema(description = "Detailed description of the category", example = "Expenses related to meals, restaurants, and food purchases")
     private String description;
 }
