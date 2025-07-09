@@ -66,4 +66,11 @@ curl -X POST http://localhost:8080/api/expenses \
     "amount": 25.50,
     "description": "Lunch at a restaurant"
   }'
-```@
+```
+
+# Util commands
+## To enter the database
+```bash
+docker exec -it expenses_postgres bash
+psql -h localhost -U dios -d expensedb
+```
