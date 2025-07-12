@@ -4,9 +4,16 @@ import com.dios.expensesapi.config.JwtUtil;
 import com.dios.expensesapi.dto.AuthResponse;
 import com.dios.expensesapi.dto.LoginRequest;
 import com.dios.expensesapi.dto.RegisterRequest;
+import com.dios.expensesapi.dto.error.ErrorResponse;
+import com.dios.expensesapi.dto.error.ValidationErrorResponse;
 import com.dios.expensesapi.model.Role;
 import com.dios.expensesapi.model.User;
 import com.dios.expensesapi.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +38,36 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
+    @Operation(
+            summary = "User login",
+            description = "Authenticate a user with email and password. Returns a JWT token upon successful authentication."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Login successful",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AuthResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid input data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ValidationErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid credentials",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
