@@ -1,9 +1,7 @@
 package com.dios.expensesapi.service;
 
-
 import com.dios.expensesapi.dto.CategoryDTO;
 import com.dios.expensesapi.dto.CategoryResponseDTO;
-import com.dios.expensesapi.model.Category;
 
 import java.util.Optional;
 import java.util.UUID;

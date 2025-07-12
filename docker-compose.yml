@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: expenses_postgres
+    environment:
+      POSTGRES_DB: expensedb
+      POSTGRES_USER: dios
+      POSTGRES_PASSWORD: 123A4Ñv
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - expenses-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dios -d expensedb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  expenses-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expenses_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/expensedb
+      SPRING_DATASOURCE_USERNAME: dios
+      SPRING_DATASOURCE_PASSWORD: 123A4Ñv
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      JWT_SECRET: myVerySecretKeyThatShouldBeAtLeast32CharactersLong
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    networks:
+      - expenses-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  expenses-network:
+    driver: bridge

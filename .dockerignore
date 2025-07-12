@@ -1,0 +1,21 @@
+.git
+.gitignore
+README.md
+.env
+.DS_Store
+.vscode
+.idea
+
+build/
+!build/libs/
+target/
+
+# Logs
+logs/
+*.log
+
+tmp/
+temp/
+
+application-local.properties
+application-dev.properties
