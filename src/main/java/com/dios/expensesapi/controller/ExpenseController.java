@@ -4,6 +4,7 @@ import com.dios.expensesapi.dto.ExpenseDTO;
 import com.dios.expensesapi.dto.ExpenseResponseDTO;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.service.ExpenseService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/expenses")
 @Tag(name = "Expenses", description = "Operations related to expense managment. Allows users to create, read, update and delete their personal expenses.")
+@SecurityRequirement(name = "bearerAuth")
 public class ExpenseController {
 
     private final ExpenseService expenseService;
