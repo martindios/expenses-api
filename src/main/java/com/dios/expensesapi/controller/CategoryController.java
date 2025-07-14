@@ -187,6 +187,32 @@ public class CategoryController {
         return ResponseEntity.ok(updated);
     }
 
+    @Operation(
+            summary = "Delete a category",
+            description = "Delete an existing category by its ID. This operation cannot be undone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Category deleted successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Category not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - invalid or missing JWT token",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         categoryService.deleteById(id);
