@@ -1,6 +1,7 @@
 package com.dios.expensesapi.config;
 
 import com.dios.expensesapi.service.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,6 +55,13 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+
+        // When request does not bring token throw 401, not 403
+        http.exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(
+                (request, response, exception) -> {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
+                }
+        ));
 
         return http.build();
     }
