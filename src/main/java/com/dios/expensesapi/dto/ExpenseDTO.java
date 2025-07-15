@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ExpenseDTO {
 
     @NotNull(message = "Date is mandatory")
-    @Schema(description = "Date when the expense occurred", example = "01-01-2001 01:01:01")
+    @Schema(description = "Date when the expense occurred", example = "2025-07-15T14:30:00")
     private LocalDateTime expenseDate;
 
     // Cannot use NotNull because one of them can be null; the hasValidCategory() is used
