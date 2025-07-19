@@ -2,6 +2,8 @@ package com.dios.expensesapi.service;
 
 import com.dios.expensesapi.dto.ExpenseDTO;
 import com.dios.expensesapi.dto.ExpenseResponseDTO;
+import com.dios.expensesapi.exception.DuplicateResourceException;
+import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.model.Category;
 import com.dios.expensesapi.model.Expense;
 import com.dios.expensesapi.model.User;
@@ -13,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,10 +30,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+/* Para que no salte el error UnnecessaryStubbingException en el caso de que haya algun stub que no se use */
 public class ExpenseServiceImplTest {
 
     /* Creación de objetos simulados de las dependencias */
@@ -164,5 +171,113 @@ public class ExpenseServiceImplTest {
 
     }
 
+    @Test
+    public void create_WithValidCategoryId_ShouldCreateExpense() {
 
+        // Arrange
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.of(testCategory));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+
+        // Act
+        ExpenseResponseDTO result = expenseService.create(testExpenseDTO);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testExpenseId);
+        assertThat(result.getAmount()).isEqualTo(new BigDecimal("100.50"));
+        assertThat(result.getDescription()).isEqualTo("Lunch");
+        assertThat(result.getCategory().getName()).isEqualTo("Food");
+
+        verify(categoryRepository).findById(testCategoryId);
+        verify(expenseRepository).save(any(Expense.class));
+        verify(userService).findByEmail(testUserEmail);
+    }
+
+    @Test
+    public void create_WithInvalidCategoryId_ShouldThrowResourceNotFoundException() {
+
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.empty());
+
+        // Comprobar que lanza la excepción que debe
+        assertThatThrownBy(() -> expenseService.create(testExpenseDTO))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Category");
+
+        verify(categoryRepository).findById(testCategoryId);
+        // El never() se asegura de que no se haya llamado al método
+        verify(expenseRepository, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void create_WithInvalidCategoryData_ShouldThrowIllegalArgumentException() {
+
+        testExpenseDTO.setCategoryId(null);
+        testExpenseDTO.setCategoryName(null);
+
+        assertThatThrownBy(() -> expenseService.create(testExpenseDTO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Either categoryId or categoryName must be provided");
+
+        verify(categoryRepository, never()).findById(any());
+        verify(categoryRepository, never()).findByName(any());
+        verify(expenseRepository, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void create_WithDataIntegrityViolation_ShouldThrowDuplicateResourceException() {
+
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.of(testCategory));
+        when(expenseRepository.save(any(Expense.class))).thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+        assertThatThrownBy(() -> expenseService.create(testExpenseDTO))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("Expense");
+
+        verify(categoryRepository).findById(testCategoryId);
+        verify(expenseRepository).save(any(Expense.class));
+    }
+
+    @Test
+    void update_WithValidData_ShouldUpdateExpense() {
+
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.of(testCategory));
+        when(expenseRepository.findByUserAndId(testUser, testExpenseId)).thenReturn(Optional.of(testExpense));
+        when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
+
+        ExpenseResponseDTO result = expenseService.update(testExpenseId, testExpenseDTO);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testExpenseId);
+        assertThat(result.getAmount()).isEqualTo(new BigDecimal("100.50"));
+
+        verify(categoryRepository).findById(testCategoryId);
+        verify(expenseRepository).findByUserAndId(testUser, testExpenseId);
+        verify(expenseRepository).save(testExpense);
+    }
+
+    @Test
+    void update_WithNonExistentExpense_ShouldThrowResourceNotFoundException() {
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.of(testCategory));
+        when(expenseRepository.findByUserAndId(testUser, testExpenseId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> expenseService.update(testExpenseId, testExpenseDTO))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Expense");
+
+        verify(categoryRepository).findById(testCategoryId);
+        verify(expenseRepository).findByUserAndId(testUser, testExpenseId);
+        verify(expenseRepository, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void update_WithInvalidCategory_ShouldThrowResourceNotFoundException() {
+        when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> expenseService.update(testExpenseId, testExpenseDTO))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Category");
+
+        verify(categoryRepository).findById(testCategoryId);
+        verify(expenseRepository, never()).findByUserAndId(any(), any());
+    }
 }
