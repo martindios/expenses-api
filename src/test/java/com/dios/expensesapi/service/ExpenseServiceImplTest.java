@@ -105,7 +105,7 @@ public class ExpenseServiceImplTest {
     }
 
     @Test
-    public void findAll_ShouldReturnAllExpensesForCurrentUser() {
+     void findAll_ShouldReturnAllExpensesForCurrentUser() {
 
         // Arrange
         List<Expense> expenses = Arrays.asList(testExpense);
@@ -133,7 +133,7 @@ public class ExpenseServiceImplTest {
     }
 
     @Test
-    public void findById_WhenExpenseExists_ShouldReturnExpenseResponseDTO() {
+     void findById_WhenExpenseExists_ShouldReturnExpenseResponseDTO() {
 
         // Arrange
         // Se coloca .findByUserAndId() porque .findById() lo utiliza en su impl
@@ -155,7 +155,7 @@ public class ExpenseServiceImplTest {
     }
 
     @Test
-    public void findById_WhenExpenseDoesNotExists_ShouldReturnEmptyOptional() {
+     void findById_WhenExpenseDoesNotExists_ShouldReturnEmptyOptional() {
 
         // Arrange
         when(expenseRepository.findByUserAndId(testUser, testExpenseId)).thenReturn(Optional.empty());
@@ -172,7 +172,7 @@ public class ExpenseServiceImplTest {
     }
 
     @Test
-    public void create_WithValidCategoryId_ShouldCreateExpense() {
+     void create_WithValidCategoryId_ShouldCreateExpense() {
 
         // Arrange
         when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.of(testCategory));
@@ -194,7 +194,7 @@ public class ExpenseServiceImplTest {
     }
 
     @Test
-    public void create_WithInvalidCategoryId_ShouldThrowResourceNotFoundException() {
+     void create_WithInvalidCategoryId_ShouldThrowResourceNotFoundException() {
 
         when(categoryRepository.findById(testCategoryId)).thenReturn(Optional.empty());
 
@@ -279,5 +279,48 @@ public class ExpenseServiceImplTest {
 
         verify(categoryRepository).findById(testCategoryId);
         verify(expenseRepository, never()).findByUserAndId(any(), any());
+    }
+
+    @Test
+    void deleteById_WithValidData_ShouldDeleteExpense() {
+        when(expenseRepository.existsById(testExpenseId)).thenReturn(true);
+        when(expenseRepository.findByUser(testUser)).thenReturn(Arrays.asList(testExpense));
+
+        expenseService.deleteById(testExpenseId);
+
+        verify(expenseRepository).existsById(testExpenseId);
+        verify(expenseRepository).findByUser(testUser);
+        verify(expenseRepository).deleteById(testExpenseId);
+    }
+
+    @Test
+    void deleteById_WithNonExistentId_ShouldThrowResourceNotFoundException() {
+        when(expenseRepository.existsById(testExpenseId)).thenReturn(false);
+
+        assertThatThrownBy(() -> expenseService.deleteById(testExpenseId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Expense");
+
+        verify(expenseRepository).existsById(testExpenseId);
+        verify(expenseRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteById_WithExpenseNotBelongingToUser_ShouldNotDelete() {
+        UUID otherExpenseId = UUID.randomUUID();
+        Expense otherExpense = Expense.builder()
+                .id(otherExpenseId)
+                .user(testUser)
+                .build();
+
+        when(expenseRepository.existsById(testExpenseId)).thenReturn(true);
+        when(expenseRepository.findByUser(testUser)).thenReturn(Arrays.asList(otherExpense));
+
+        // Se intenta borrar testExpense, pero gasto del usuario solo es otherExpense
+        expenseService.deleteById(testExpenseId);
+
+        verify(expenseRepository).existsById(testExpenseId);
+        verify(expenseRepository).findByUser(testUser);
+        verify(expenseRepository, never()).deleteById(testExpenseId);
     }
 }
