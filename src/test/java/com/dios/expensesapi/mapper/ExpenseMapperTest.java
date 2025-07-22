@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class ExpenseMapperTest {
@@ -183,11 +184,19 @@ public class ExpenseMapperTest {
         assertThat(result.getDescription()).isNull();
     }
 
+
     @Test
     void toResponseDTO_WithValidExpense_ShouldCreateExpenseResponseDTO() {
+        /*
+         * Use try-with-resources syntax to create a temporary static mock of CategoryMapper:
+         * - mockStatic(CategoryMapper.class) returns a MockedStatic that implements AutoCloseable.
+         * - Wrapping it in try(...) ensures the mock is automatically closed (and real behavior restored)
+         *   when the block exits, preventing side effects in other tests.
+         * We mock CategoryMapper.toResponseDTO(...) so that:
+         * 1. We isolate this unit test to only verify ExpenseMapper’s logic.
+         * 2. We avoid pulling in CategoryMapper’s implementation or dependencies.
+         */
         // Arrange
-        /* This is try-with-resources syntax, create a temporary static mock of CategoryMapper for the
-        duration of the test */
         try (MockedStatic<CategoryMapper> categoryMapperMock = mockStatic(CategoryMapper.class)) {
             categoryMapperMock.when(() -> CategoryMapper.toResponseDTO(testCategory))
                     .thenReturn(testCategoryResponseDTO);
@@ -207,6 +216,112 @@ public class ExpenseMapperTest {
 
             // Verify CategoryMapper was called
             categoryMapperMock.verify(() -> CategoryMapper.toResponseDTO(testCategory));
+        }
+    }
+
+    @Test
+    void toResponseDTO_WithNullValues_ShouldHandleNullsCorrectly() {
+        testExpense.setExpenseDate(null);
+        testExpense.setDescription(null);
+        testExpense.setCreatedAt(null);
+
+        try (MockedStatic<CategoryMapper> categoryMapperMock = mockStatic(CategoryMapper.class)) {
+            categoryMapperMock.when(() -> CategoryMapper.toResponseDTO(testCategory))
+                    .thenReturn(testCategoryResponseDTO);
+
+            ExpenseResponseDTO result = ExpenseMapper.toResponseDTO(testExpense);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getId()).isEqualTo(testExpenseId);
+            assertThat(result.getUserId()).isEqualTo(testUserId);
+            assertThat(result.getExpenseDate()).isNull();
+            assertThat(result.getCategory()).isEqualTo(testCategoryResponseDTO);
+            assertThat(result.getAmount()).isEqualTo(testAmount);
+            assertThat(result.getDescription()).isNull();
+            assertThat(result.getCreatedAt()).isNull();
+
+            categoryMapperMock.verify(() -> CategoryMapper.toResponseDTO(testCategory));
+        }
+    }
+
+    @Test
+    void toResponseDTO_WithNullCategory_ShouldHandleNullCategory() {
+        testExpense.setCategory(null);
+
+        try (MockedStatic<CategoryMapper> categoryMapperMock = mockStatic(CategoryMapper.class)) {
+            categoryMapperMock.when(() -> CategoryMapper.toResponseDTO(null))
+                    .thenReturn(null);
+
+            ExpenseResponseDTO result = ExpenseMapper.toResponseDTO(testExpense);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getId()).isEqualTo(testExpenseId);
+            assertThat(result.getUserId()).isEqualTo(testUserId);
+            assertThat(result.getExpenseDate()).isEqualTo(testExpenseDate);
+            assertThat(result.getCategory()).isNull();
+            assertThat(result.getAmount()).isEqualTo(testAmount);
+            assertThat(result.getDescription()).isEqualTo(testDescription);
+            assertThat(result.getCreatedAt()).isEqualTo(testCreatedAt);
+
+            categoryMapperMock.verify(() -> CategoryMapper.toResponseDTO(null));
+        }
+    }
+
+    @Test
+    void toResponseDTO_CategoryMapperIntegration_ShouldCallCategoryMapper() {
+        CategoryResponseDTO expectedCategoryResponse = CategoryResponseDTO.builder()
+                .id(testCategoryId)
+                .name("Different Name")
+                .description("Different Description")
+                .build();
+
+        try (MockedStatic<CategoryMapper> categoryMapperMock = mockStatic(CategoryMapper.class)) {
+            categoryMapperMock.when(() -> CategoryMapper.toResponseDTO(testCategory))
+                    .thenReturn(expectedCategoryResponse);
+
+            ExpenseResponseDTO result = ExpenseMapper.toResponseDTO(testExpense);
+
+            assertThat(result.getCategory()).isEqualTo(expectedCategoryResponse);
+            assertThat(result.getCategory().getName()).isEqualTo("Different Name");
+            assertThat(result.getCategory().getDescription()).isEqualTo("Different Description");
+
+            categoryMapperMock.verify(() -> CategoryMapper.toResponseDTO(testCategory), times(1));
+        }
+    }
+
+    // Edge cases and validation tests
+    @Test
+    void toEntity_WithZeroAmount_ShouldCreateEntityWithZeroAmount() {
+        testExpenseDTO.setAmount(BigDecimal.ZERO);
+
+        Expense result = ExpenseMapper.toEntity(testExpenseDTO, testCategory);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getAmount()).isEqualTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void toDTO_WithZeroAmount_ShouldCreateDTOWithZeroAmount() {
+        testExpense.setAmount(BigDecimal.ZERO);
+
+        ExpenseDTO result = ExpenseMapper.toDTO(testExpense);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getAmount()).isEqualTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void toResponseDTO_WithZeroAmount_ShouldCreateResponseDTOWithZeroAmount() {
+        testExpense.setAmount(BigDecimal.ZERO);
+
+        try (MockedStatic<CategoryMapper> categoryMapperMock = mockStatic(CategoryMapper.class)) {
+            categoryMapperMock.when(() -> CategoryMapper.toResponseDTO(testCategory))
+                    .thenReturn(testCategoryResponseDTO);
+
+            ExpenseResponseDTO result = ExpenseMapper.toResponseDTO(testExpense);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getAmount()).isEqualTo(BigDecimal.ZERO);
         }
     }
 }
