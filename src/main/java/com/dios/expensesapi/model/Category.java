@@ -9,6 +9,11 @@ import java.util.UUID;
 @Table(name = "categories")
 @Schema(description = "Category entity for classifying different types of expenses")
 public class Category {
+
+    // ================================
+    // FIELDS
+    // ================================
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Schema(description = "Unique identifier for the category", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -22,6 +27,10 @@ public class Category {
     @Schema(description = "Detailed description of the category", example = "Expenses related to meals, restaurants, and food purchases")
     private String description;
 
+    // ================================
+    // CONSTRUCTORS
+    // ================================
+
     public Category() {
     }
 
@@ -30,6 +39,10 @@ public class Category {
         this.name = name;
         this.description = description;
     }
+
+    // ================================
+    // GETTERS AND SETTERS
+    // ================================
 
     public UUID getId() {
         return id;
@@ -54,6 +67,10 @@ public class Category {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    // ================================
+    // BUILDER PATTERN
+    // ================================
 
     public static Builder builder() {
         return new Builder();
