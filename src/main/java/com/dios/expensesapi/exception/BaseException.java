@@ -1,8 +1,5 @@
 package com.dios.expensesapi.exception;
 
-import lombok.Getter;
-
-@Getter
 public class BaseException extends RuntimeException {
     private final String errorCode;
 
@@ -11,4 +8,7 @@ public class BaseException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    public String getErrorCode() {
+        return errorCode;
+    }
 }
