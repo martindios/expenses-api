@@ -1,7 +1,8 @@
 package com.dios.expensesapi.exception;
 
 import com.dios.expensesapi.dto.error.ValidationErrorResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.dios.expensesapi.dto.error.ErrorResponse;
@@ -15,8 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestControllerAdvice
-@Slf4j // Para habilitar registro (logging) (Simple Logging Facade for Java). Logger estático para la clase
 public class GlobalHandlerException {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalHandlerException.class);
 
     // Handle not found resources
     @ExceptionHandler(ResourceNotFoundException.class) // Anotación que avisa a Spring que cuando se lance esta excepción ejecute este método
