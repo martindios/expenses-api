@@ -13,6 +13,10 @@ import java.util.UUID;
 @Schema(description = "Expense entity representing a user's financial expense record")
 public class Expense {
 
+    // ================================
+    // FIELDS
+    // ================================
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Schema(description = "Unique identifier for the expense", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -45,6 +49,10 @@ public class Expense {
     @Schema(description = "Timestamp when the expense record was created", example = "01-01-2001 01:01:01")
     private LocalDateTime createdAt;
 
+    // ================================
+    // CONSTRUCTORS
+    // ================================
+
     public Expense() {
     }
 
@@ -57,6 +65,10 @@ public class Expense {
         this.description = description;
         this.createdAt = createdAt;
     }
+
+    // ================================
+    // GETTERS AND SETTERS
+    // ================================
 
     public UUID getId() {
         return id;
@@ -117,6 +129,10 @@ public class Expense {
     public UUID getUserId() {
         return user != null ? user.getId() : null;
     }
+
+    // ================================
+    // BUILDER PATTERN
+    // ================================
 
     public static Builder builder() {
         return new Builder();
