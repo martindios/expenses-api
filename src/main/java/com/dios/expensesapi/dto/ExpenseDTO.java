@@ -3,19 +3,19 @@ package com.dios.expensesapi.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
 @Validated
 @Schema(description = "Data transfer object for creating or updating an expense")
 public class ExpenseDTO {
+
+    // ================================
+    // FIELDS
+    // ================================
 
     @NotNull(message = "Date is mandatory")
     @Schema(description = "Date when the expense occurred", example = "2025-07-15T14:30:00")
@@ -37,8 +37,57 @@ public class ExpenseDTO {
     @Schema(description = "Optional description or notes about the expense", example = "Grocery shopping at local market")
     private String description;
 
+    // ================================
+    // METHOD
+    // ================================
+
     @AssertTrue(message = "Either categoryID or categoryName must be provided")
     public boolean hasValidCategory() {
         return categoryId != null || (categoryName != null && !categoryName.trim().isEmpty());
+    }
+
+    // ================================
+    // GETTERS AND SETTERS
+    // ================================
+
+
+    public LocalDateTime getExpenseDate() {
+        return expenseDate;
+    }
+
+    public void setExpenseDate(LocalDateTime expenseDate) {
+        this.expenseDate = expenseDate;
+    }
+
+    public UUID getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(UUID categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
