@@ -2,7 +2,6 @@ package com.dios.expensesapi.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -11,11 +10,6 @@ import java.util.UUID;
 
 @Entity // JPA entity, annotated to be mapped to a database table
 @Table(name = "expenses")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder // Generates a builder for the class to create instances using the builder pattern
 @Schema(description = "Expense entity representing a user's financial expense record")
 public class Expense {
 
@@ -51,8 +45,138 @@ public class Expense {
     @Schema(description = "Timestamp when the expense record was created", example = "01-01-2001 01:01:01")
     private LocalDateTime createdAt;
 
+    public Expense() {
+    }
+
+    public Expense(UUID id, User user, LocalDateTime expenseDate, Category category, BigDecimal amount, String description, LocalDateTime createdAt) {
+        this.id = id;
+        this.user = user;
+        this.expenseDate = expenseDate;
+        this.category = category;
+        this.amount = amount;
+        this.description = description;
+        this.createdAt = createdAt;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getExpenseDate() {
+        return expenseDate;
+    }
+
+    public void setExpenseDate(LocalDateTime expenseDate) {
+        this.expenseDate = expenseDate;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public UUID getUserId() {
         return user != null ? user.getId() : null;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private UUID id;
+        private User user;
+        private LocalDateTime expenseDate;
+        private Category category;
+        private BigDecimal amount;
+        private String description;
+        private LocalDateTime createdAt;
+
+        public Builder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder user(User user) {
+            this.user = user;
+            return this;
+        }
+
+        public Builder expenseDate(LocalDateTime expenseDate) {
+            this.expenseDate = expenseDate;
+            return this;
+        }
+
+        public Builder category(Category category) {
+            this.category = category;
+            return this;
+        }
+
+        public Builder amount(BigDecimal amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Expense build() {
+            return new Expense(
+                    id,
+                    user,
+                    expenseDate,
+                    category,
+                    amount,
+                    description,
+                    createdAt
+            );
+        }
+    }
 }
+
