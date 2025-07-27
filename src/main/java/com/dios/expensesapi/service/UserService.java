@@ -4,18 +4,21 @@ import com.dios.expensesapi.exception.DuplicateResourceException;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.model.User;
 import com.dios.expensesapi.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
