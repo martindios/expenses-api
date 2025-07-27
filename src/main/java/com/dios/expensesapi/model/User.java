@@ -2,7 +2,6 @@ package com.dios.expensesapi.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,15 +14,14 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 /* Implement UserDetails (Spring Security interface) so that the User
 *  entity is directly compatible */
 @Schema(description = "User entity representing a registered user in the system.")
 public class User implements UserDetails {
+
+    // ================================
+    // FIELDS
+    // ================================
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -57,7 +55,6 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    @Builder.Default
     @Schema(description = "Indicates if the user account is active", example = "true")
     private boolean enabled = true;
 
@@ -65,6 +62,11 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
+
+
+    // ================================
+    // SPRING SECURITY METHODS
+    // ================================
 
     @Override
     public String getUsername() {
@@ -74,5 +76,159 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    // ================================
+    // CONSTRUCTORS
+    // ================================
+
+    public User() {
+    }
+
+    public User(UUID id, String email, String password, String firstName, String lastName, Role role, LocalDateTime createdAt, boolean enabled) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+        this.createdAt = createdAt;
+        this.enabled = enabled;
+    }
+
+    // ================================
+    // GETTERS AND SETTERS
+    // ================================
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    // ================================
+    // BUILDER PATTERN
+    // ================================
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private UUID id;
+        private String email;
+        private String password;
+        private String firstName;
+        private String lastName;
+        private Role role;
+        private LocalDateTime createdAt;
+        private boolean enabled;
+
+        public Builder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public Builder firstName(String firstName) {
+            this.firstName = firstName;
+            return this;
+        }
+
+        public Builder lastName(String lastName) {
+            this.lastName = lastName;
+            return this;
+        }
+
+        public Builder role(Role role) {
+            this.role = role;
+            return this;
+        }
+
+        public Builder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder enabled(boolean enabled) {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public User build() {
+            return new User(
+                    id,
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    role,
+                    createdAt,
+                    enabled
+            );
+        }
     }
 }
