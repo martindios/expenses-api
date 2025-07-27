@@ -31,11 +31,15 @@ public class RegisterRequest {
     private String password;
 
     // ================================
-    // GETTERS AND SETTERS
+    // CONSTRUCTOR
     // ================================
 
     public RegisterRequest() {
     }
+
+    // ================================
+    // GETTERS AND SETTERS
+    // ================================
 
     public String getFirstName() {
         return firstName;
