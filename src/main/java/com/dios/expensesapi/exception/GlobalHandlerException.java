@@ -1,6 +1,7 @@
 package com.dios.expensesapi.exception;
 
 import com.dios.expensesapi.dto.error.ValidationErrorResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalHandlerException {
@@ -104,6 +108,33 @@ public class GlobalHandlerException {
                 .fieldErrors(fieldErrors)
                 .path(request.getDescription(false).replace("uri=", ""))
                 .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ValidationErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        List<ValidationErrorResponse.FieldError> fieldErrors = new ArrayList<>();
+
+        ex.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            String message = violation.getMessage();
+            Object invalidValue = violation.getInvalidValue();
+
+            ValidationErrorResponse.FieldError fieldError = ValidationErrorResponse.FieldError.builder()
+                    .field(fieldName)
+                    .rejectedValue(invalidValue)
+                    .message(message)
+                    .build();
+
+            fieldErrors.add(fieldError);
+        });
+
+        ValidationErrorResponse errorResponse = ValidationErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .errorCode("VALIDATION_ERROR")
+                .fieldErrors(fieldErrors)
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
