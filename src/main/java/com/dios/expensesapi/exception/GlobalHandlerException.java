@@ -12,12 +12,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestControllerAdvice
 public class GlobalHandlerException {
@@ -135,6 +133,30 @@ public class GlobalHandlerException {
                 .timestamp(LocalDateTime.now())
                 .errorCode("VALIDATION_ERROR")
                 .fieldErrors(fieldErrors)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex,  WebRequest request) {
+        String message;
+
+        if (ex.getRequiredType() != null && ex.getRequiredType().equals(UUID.class)) {
+            message = String.format("Invalid UUID format for parameter '%s': '%s'",
+                    ex.getName(), ex.getValue());
+        } else {
+            message = String.format("Invalid format for parameter '%s': expected %s but got '%s'",
+                    ex.getName(),
+                    ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown type",
+                    ex.getValue());
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .errorCode("INVALID_PARAMETER_FORMAT")
+                .message(message)
+                .path(request.getDescription(false).replace("uri=", ""))
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
