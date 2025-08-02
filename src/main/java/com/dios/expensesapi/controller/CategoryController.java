@@ -7,6 +7,7 @@ import com.dios.expensesapi.dto.error.ValidationErrorResponse;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +28,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/categories")
-@Tag(name = "Category", description = "Operations related to category managment. Provides endpoints to handle different types of expense classifications.")
+@Tag(name = "Category", description = "Operations related to category management. Provides endpoints to handle different types of expense classifications.")
 @SecurityRequirement(name = "bearerAuth")
 public class CategoryController {
 
@@ -33,15 +38,14 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-
     @Operation(
             summary = "Get all categories",
-            description = "Retrieve a list of all available expense categories for the authenticated user."
+            description = "Retrieve a paginated list of expense categories for the authenticated user."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Successfully retrieved categories",
+                    description = "Successfully retrieved paginated categories",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDTO.class))
@@ -57,9 +61,35 @@ public class CategoryController {
             )
     })
     @GetMapping
-    public ResponseEntity<Iterable<CategoryResponseDTO>> findAll() {
-        Iterable<CategoryResponseDTO> expenses = categoryService.findAll();
-        return ResponseEntity.ok(expenses);
+    public ResponseEntity<Page<CategoryResponseDTO>> findAll(
+        @Parameter(description = "Page number (0-based)", example = "0")
+        @RequestParam(defaultValue = "0")
+        int page,
+
+        @Parameter(description = "Number of items per page", example = "10")
+        @RequestParam(defaultValue = "10")
+        int size,
+
+        @Parameter(description = "Sort field", example = "name")
+        @RequestParam(defaultValue = "name")
+        String sortBy,
+
+        @Parameter(description = "Sort direction", example = "asc")
+        @RequestParam(defaultValue = "asc")
+        String sortDir
+    ) {
+
+        // Validate pagination params
+        if (page < 0) page = 0;
+        if (size < 1) size = 10;
+        if (size > 100) size = 100; // max limit
+
+        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<CategoryResponseDTO> categoriesPage = categoryService.findAll(pageable);
+
+        return ResponseEntity.ok(categoriesPage);
     }
 
     @Operation(

@@ -11,9 +11,13 @@ import com.dios.expensesapi.model.User;
 import com.dios.expensesapi.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +38,18 @@ public class CategoryServiceImpl implements CategoryService {
         return StreamSupport.stream(categoryRepository.findAll().spliterator(), false)
                 .map(CategoryMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> findAll(Pageable pageable) {
+        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+        return categoryPage.map(CategoryMapper::toResponseDTO);
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> findByNameContaining(String name, Pageable pageable) {
+        Page<Category> categoryPage = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
+        return categoryPage.map(CategoryMapper::toResponseDTO);
     }
 
     @Override
