@@ -16,31 +16,51 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/categories")
-@Tag(name = "Category", description = "Operations related to category management. Provides endpoints to handle different types of expense classifications.")
+@Tag(name = "Category", description = "Operations related to category management. Provides" +
+        " endpoints to handle different types of expense classifications.")
 @SecurityRequirement(name = "bearerAuth")
+@Validated
 public class CategoryController {
 
     private final CategoryService categoryService;
+
+    private static final List<String> VALID_SORT_FIELDS = Arrays.asList("id", "name", "description");
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
     @Operation(
-            summary = "Get all categories",
-            description = "Retrieve a paginated list of expense categories for the authenticated user."
+            summary = "Get all categories with pagination and search",
+            description = """
+                    Retrieve a paginated list of expense categories for the authenticated user.
+                    Supports filtering by name and flexible sorting options.
+                    
+                    **Usage Examples:**
+                    - Get first 10 categories: `/api/v1/categories`
+                    - Search categories: `/api/v1/categories?search=food`
+                    - Custom pagination: `/api/v1/categories?page=1&size=20&sortBy=name&sortDir=desc`
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -49,6 +69,14 @@ public class CategoryController {
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDTO.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid pagination parameters",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
                     )
             ),
             @ApiResponse(
@@ -63,31 +91,36 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<Page<CategoryResponseDTO>> findAll(
         @Parameter(description = "Page number (0-based)", example = "0")
-        @RequestParam(defaultValue = "0")
-        int page,
+        @RequestParam(defaultValue = "0") @Min(0) int page,
 
-        @Parameter(description = "Number of items per page", example = "10")
-        @RequestParam(defaultValue = "10")
-        int size,
+        @Parameter(description = "Number of items per page (1-100)", example = "10")
+        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) int size,
 
-        @Parameter(description = "Sort field", example = "name")
-        @RequestParam(defaultValue = "name")
-        String sortBy,
+        @Parameter(description = "Sort field. Valid values: id, name, description", example = "name")
+        @RequestParam(defaultValue = "name") String sortBy,
 
-        @Parameter(description = "Sort direction", example = "asc")
-        @RequestParam(defaultValue = "asc")
-        String sortDir
+        @Parameter(description = "Sort direction", example = "asc", schema = @Schema(allowableValues = {"asc", "desc"}))
+        @RequestParam(defaultValue = "asc") @Pattern(regexp = "^(asc|desc)$",
+                message = "Sort direction must be 'asc' or 'desc'") String sortDir,
+
+        @Parameter(description = "Search term to filter categories by name", example = "food")
+        @RequestParam(required = false) String search
     ) {
 
-        // Validate pagination params
-        if (page < 0) page = 0;
-        if (size < 1) size = 10;
-        if (size > 100) size = 100; // max limit
+        if(!VALID_SORT_FIELDS.contains(sortBy)) {
+            sortBy = "name";
+        }
 
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
-        Page<CategoryResponseDTO> categoriesPage = categoryService.findAll(pageable);
+        Page<CategoryResponseDTO> categoriesPage;
+
+        if(search != null && !search.isEmpty()) {
+            categoriesPage = categoryService.findByNameContaining(search.trim(), pageable);
+        } else {
+            categoriesPage = categoryService.findAll(pageable);
+        }
 
         return ResponseEntity.ok(categoriesPage);
     }
@@ -106,8 +139,8 @@ public class CategoryController {
                     )
             ),
             @ApiResponse(
-                    responseCode = "404",
-                    description = "Category not found",
+                    responseCode = "400",
+                    description = "Invalid UUID format",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -116,6 +149,14 @@ public class CategoryController {
             @ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized - invalid or missing JWT token",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Category not found",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)
