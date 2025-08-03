@@ -27,6 +27,11 @@ public class Category {
     @Schema(description = "Detailed description of the category", example = "Expenses related to meals, restaurants, and food purchases")
     private String description;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false)
+    @Schema(description = "User who owns this category")
+    private User user;
+
     // ================================
     // CONSTRUCTORS
     // ================================
@@ -34,10 +39,11 @@ public class Category {
     public Category() {
     }
 
-    public Category(UUID id, String name, String description) {
+    public Category(UUID id, String name, String description, User user) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.user = user;
     }
 
     // ================================
@@ -68,6 +74,14 @@ public class Category {
         this.description = description;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     // ================================
     // BUILDER PATTERN
     // ================================
@@ -80,6 +94,7 @@ public class Category {
         private UUID id;
         private String name;
         private String description;
+        private User user;
 
         public Builder id(UUID id) {
             this.id = id;
@@ -96,8 +111,13 @@ public class Category {
             return this;
         }
 
+        public Builder user(User user) {
+            this.user = user;
+            return this;
+        }
+
         public Category build() {
-            return new Category(id, name, description);
+            return new Category(id, name, description,  user);
         }
     }
 }

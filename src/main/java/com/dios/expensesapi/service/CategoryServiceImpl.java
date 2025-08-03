@@ -28,9 +28,11 @@ import java.util.stream.StreamSupport;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final UserService userService;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, UserService userService) {
         this.categoryRepository = categoryRepository;
+        this.userService = userService;
     }
 
     @Override
@@ -42,7 +44,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Page<CategoryResponseDTO> findAll(Pageable pageable) {
-        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        User currentUser = userService.findByEmail(userEmail);
+
+        Page<Category> categoryPage = categoryRepository.findByUserId(currentUser.getId(), pageable);
         return categoryPage.map(CategoryMapper::toResponseDTO);
     }
 
@@ -60,12 +66,17 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponseDTO create(CategoryDTO categoryDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        User currentUser = userService.findByEmail(userEmail);
+
         if(categoryRepository.findByName(categoryDTO.getName()).isPresent()){
             throw new DuplicateResourceException("Category", "name",  categoryDTO.getName());
         }
 
         try {
             Category category = CategoryMapper.toEntity(categoryDTO);
+            category.setUser(currentUser);
             Category saved = categoryRepository.save(category);
             return CategoryMapper.toResponseDTO(saved);
         } catch (DataIntegrityViolationException e) {

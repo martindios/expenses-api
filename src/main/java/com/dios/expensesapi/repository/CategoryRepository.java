@@ -11,6 +11,6 @@ import java.util.UUID;
 
 public interface CategoryRepository extends CrudRepository<Category, UUID>, PagingAndSortingRepository<Category, UUID> {
     Optional<Category> findByName(String name);
-
     Page<Category> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<Category> findByUserId(UUID id, Pageable pageable);
 }
