@@ -128,6 +128,7 @@ public class AuthController {
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .role(Role.USER)
+                .enabled(true)
                 .build();
 
         User savedUser = userService.createUser(user);
