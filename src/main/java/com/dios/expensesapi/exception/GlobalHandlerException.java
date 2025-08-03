@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.dios.expensesapi.dto.error.ErrorResponse;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -156,6 +157,18 @@ public class GlobalHandlerException {
                 .timestamp(LocalDateTime.now())
                 .errorCode("INVALID_PARAMETER_FORMAT")
                 .message(message)
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(WebRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .errorCode("MALFORMED_REQUEST")
+                .message("Invalid JSON format or malformed request body")
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
 
