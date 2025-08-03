@@ -2,6 +2,7 @@ package com.dios.expensesapi.controller;
 
 import com.dios.expensesapi.dto.CategoryDTO;
 import com.dios.expensesapi.dto.CategoryResponseDTO;
+import com.dios.expensesapi.dto.PagedResponse;
 import com.dios.expensesapi.dto.error.ErrorResponse;
 import com.dios.expensesapi.dto.error.ValidationErrorResponse;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
@@ -42,10 +43,6 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    private static final List<String> VALID_SORT_FIELDS = Arrays.asList("id", "name", "description");
-    private static final int MAX_PAGE_SIZE = 100;
-    private static final int DEFAULT_PAGE_SIZE = 10;
-
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
@@ -57,9 +54,9 @@ public class CategoryController {
                     Supports filtering by name and flexible sorting options.
                     
                     **Usage Examples:**
-                    - Get first 10 categories: `/api/v1/categories`
-                    - Search categories: `/api/v1/categories?search=food`
-                    - Custom pagination: `/api/v1/categories?page=1&size=20&sortBy=name&sortDir=desc`
+                    - Get first 10 categories: `/api/categories`
+                    - Search categories: `/api/categories?search=food`
+                    - Custom pagination: `/api/categories?page=1&size=20&sortBy=name&sortDir=desc`
                     """
     )
     @ApiResponses(value = {
@@ -89,14 +86,14 @@ public class CategoryController {
             )
     })
     @GetMapping
-    public ResponseEntity<Page<CategoryResponseDTO>> findAll(
+    public ResponseEntity<PagedResponse<CategoryResponseDTO>> findAll(
         @Parameter(description = "Page number (0-based)", example = "0")
         @RequestParam(defaultValue = "0") @Min(0) int page,
 
         @Parameter(description = "Number of items per page (1-100)", example = "10")
-        @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) int size,
+        @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
 
-        @Parameter(description = "Sort field. Valid values: id, name, description", example = "name")
+        @Parameter(description = "Sort field. Valid values: name, description", example = "name")
         @RequestParam(defaultValue = "name") String sortBy,
 
         @Parameter(description = "Sort direction", example = "asc", schema = @Schema(allowableValues = {"asc", "desc"}))
@@ -107,7 +104,8 @@ public class CategoryController {
         @RequestParam(required = false) String search
     ) {
 
-        if(!VALID_SORT_FIELDS.contains(sortBy)) {
+        List<String> validSortFields = Arrays.asList("name", "description");
+        if (!validSortFields.contains(sortBy)) {
             sortBy = "name";
         }
 
@@ -122,7 +120,9 @@ public class CategoryController {
             categoriesPage = categoryService.findAll(pageable);
         }
 
-        return ResponseEntity.ok(categoriesPage);
+        PagedResponse<CategoryResponseDTO> response = new PagedResponse<>(categoriesPage);
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
