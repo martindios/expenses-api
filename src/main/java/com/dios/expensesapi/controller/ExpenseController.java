@@ -1,12 +1,15 @@
 package com.dios.expensesapi.controller;
 
+import com.dios.expensesapi.dto.CategoryResponseDTO;
 import com.dios.expensesapi.dto.ExpenseDTO;
 import com.dios.expensesapi.dto.ExpenseResponseDTO;
+import com.dios.expensesapi.dto.PagedResponse;
 import com.dios.expensesapi.dto.error.ErrorResponse;
 import com.dios.expensesapi.dto.error.ValidationErrorResponse;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
 import com.dios.expensesapi.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,10 +18,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,8 +46,16 @@ public class ExpenseController {
     }
 
     @Operation(
-            summary = "Get all expenses",
-            description = "Retrieve a list of all expenses for the authenticated user, including expense details and associated categories."
+            summary = "Get all expenses with pagination and search",
+            description = """
+                    Retrieve a paginated list of expenses for the authenticated user.
+                    Supports filtering by category and flexible sorting options.
+                    
+                    **Usage Examples:**
+                    - Get first 10 expenses: `/api/expenses`
+                    - Search expenses: `/api/expenses?search=food`
+                    - Custom pagination: `/api/expenses?page=1&size=20&sortBy=cateogory&sortDir=desc`
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -44,6 +64,14 @@ public class ExpenseController {
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = ExpenseResponseDTO.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid pagination parameters",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
                     )
             ),
             @ApiResponse(
@@ -56,9 +84,42 @@ public class ExpenseController {
             )
     })
     @GetMapping
-    public ResponseEntity<Iterable<ExpenseResponseDTO>> findAll() {
-        Iterable<ExpenseResponseDTO> expenses = expenseService.findAll();
-        return ResponseEntity.ok(expenses);
+    public ResponseEntity<PagedResponse<ExpenseResponseDTO>> findAll(
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+
+            @Parameter(description = "Number of items per page (1-100)", example = "10")
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+
+            @Parameter(description = "Sort field. Valid values: category, description", example = "category")
+            @RequestParam(defaultValue = "name") String sortBy,
+
+            @Parameter(description = "Sort direction", example = "asc", schema = @Schema(allowableValues = {"asc", "desc"}))
+            @RequestParam(defaultValue = "asc") @Pattern(regexp = "^(asc|desc)$",
+                    message = "Sort direction must be 'asc' or 'desc'") String sortDir,
+
+            @Parameter(description = "Search term to filter expenses by category", example = "food")
+            @RequestParam(required = false) String search
+    ) {
+        List<String> validSortFields = Arrays.asList("category", "description");
+        if (!validSortFields.contains(sortBy)) {
+            sortBy = "category";
+        }
+
+        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<ExpenseResponseDTO> expensesPage;
+
+        if(search != null && !search.isEmpty()) {
+            expensesPage = expenseService.findByCategoryName(search.trim(), pageable);
+        } else {
+            expensesPage = expenseService.findAll(pageable);
+        }
+
+        PagedResponse<ExpenseResponseDTO> response = new PagedResponse<>(expensesPage);
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(

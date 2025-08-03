@@ -4,6 +4,7 @@ import com.dios.expensesapi.dto.ExpenseDTO;
 import com.dios.expensesapi.dto.ExpenseResponseDTO;
 import com.dios.expensesapi.exception.DuplicateResourceException;
 import com.dios.expensesapi.exception.ResourceNotFoundException;
+import com.dios.expensesapi.mapper.CategoryMapper;
 import com.dios.expensesapi.mapper.ExpenseMapper;
 import com.dios.expensesapi.model.Category;
 import com.dios.expensesapi.model.Expense;
@@ -12,6 +13,8 @@ import com.dios.expensesapi.repository.CategoryRepository;
 import com.dios.expensesapi.repository.ExpenseRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,21 @@ public class ExpenseServiceImpl implements ExpenseService {
         return StreamSupport.stream(expenseRepository.findByUser(currentUser).spliterator(), false)
                 .map(ExpenseMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Override
+    public Page<ExpenseResponseDTO> findAll(Pageable pageable) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        User currentUser = userService.findByEmail(userEmail);
+
+        return expenseRepository.findAll(pageable).map(ExpenseMapper::toResponseDTO);
+    }
+
+    @Override
+    public Page<ExpenseResponseDTO> findByCategoryName(String categoryName, Pageable pageable) {
+        Page<Expense> expensePage = expenseRepository.findByCategory_Name(categoryName, pageable);
+        return expensePage.map(ExpenseMapper::toResponseDTO);
     }
 
     @Override
